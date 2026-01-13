@@ -1,0 +1,35 @@
+# Data Configuration
+train_sensor: ./data/LivDet2011/Biometrika
+test_sensor: ./data/LivDet2011/Biometrika
+transform_type: mosfpad
+
+# Training Configuration
+epochs: 300
+batch_size: 24
+learning_rate: 0.0001
+weight_decay: 0.0004
+val_split: 0.2
+
+# Loss Configuration
+hinge_margin: 1.0
+
+# Learning Rate Scheduler Configuration (Optional)
+use_scheduler: true
+scheduler_type: plateau  # Options: 'step', 'cosine', 'plateau'
+lr_step_size: 50      # For 'step' scheduler
+lr_gamma: 0.1         # For 'step' and 'plateau' schedulers
+lr_min: 1e-6          # For 'cosine' scheduler
+lr_patience: 10       # For 'plateau' scheduler
+
+# Other Configuration
+num_workers: 4
+seed: 42
+config_dir: ./configs
+log_dir: ./logs
+checkpoint_dir: ./checkpoints
+results_dir: ./results
+config_name: config.yaml
+best_model_name: best_model.pth
+checkpoint_prefix: checkpoint_epoch_
+test_results_name: test_results.txt
+save_freq: 50
