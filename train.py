@@ -5,6 +5,7 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
+import torch.nn.utils as utils
 import torch.optim as optim
 import yaml
 from torch.utils.tensorboard import SummaryWriter
@@ -36,11 +37,15 @@ def train_epoch(model, train_loader, criterion, optimizer, device, epoch):
         optimizer.zero_grad()
         outputs = model(images)
 
-        # Convert labels from {0, 1} to {-1, +1} for hinge loss
+        # Convert labels from {0, 1} to {-1, +1} for MarginRankingLoss
         targets = 2 * labels - 1
-        loss = criterion(outputs, targets)
+        # MarginRankingLoss requires (input1, input2, target)
+        # Use zeros as input2 (decision boundary at 0)
+        zeros = torch.zeros_like(outputs)
+        loss = criterion(outputs, zeros, targets)
 
         loss.backward()
+        utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
 
         running_loss += loss.item() * labels.size(0)
@@ -77,9 +82,12 @@ def validate(model, val_loader, criterion, device, epoch):
 
             outputs = model(images)
 
-            # Convert labels from {0, 1} to {-1, +1} for hinge loss
+            # Convert labels from {0, 1} to {-1, +1} for MarginRankingLoss
             targets = 2 * labels - 1
-            loss = criterion(outputs, targets)
+            # MarginRankingLoss requires (input1, input2, target)
+            # Use zeros as input2 (decision boundary at 0)
+            zeros = torch.zeros_like(outputs)
+            loss = criterion(outputs, zeros, targets)
 
             running_loss += loss.item() * labels.size(0)
 
@@ -211,8 +219,8 @@ def main(config):
         f"Model initialized with {sum(p.numel() for p in model.parameters())} parameters"
     )
 
-    # Loss and optimizer - use PyTorch's built-in hinge loss
-    criterion = nn.HingeEmbeddingLoss(margin=config.get("hinge_margin", 1.0))
+    # Loss and optimizer - use MarginRankingLoss
+    criterion = nn.MarginRankingLoss(margin=config.get("hinge_margin", 1.0))
 
     optimizer = optim.Adam(
         model.parameters(),

@@ -14,7 +14,7 @@ class FinPADDataset(Dataset):
         self.samples = []
         phase = "Train" if train else "Test"
         phase_path = os.path.join(sensor_path, phase)
-        print(f"Loading {"train" if train else "test"} data of {sensor_path}")
+        print(f"Loading {'train' if train else 'test'} data of {sensor_path}")
         self._load_data(phase_path)
 
     def _load_data(self, phase_path):
@@ -102,8 +102,8 @@ def get_data_loaders(
     train_subset, val_subset = split_dataset(
         train_dataset, val_split=val_split, seed=seed
     )
-    train_set = TransformedDataset(train_subset, transform["Train"])
-    val_set = TransformedDataset(val_subset, transform["Test"])
+    train_set = TransformedDataset(train_subset, transform["train"])
+    val_set = TransformedDataset(val_subset, transform["test"])
     train_loader = DataLoader(
         train_set,
         batch_size=batch_size,
@@ -122,7 +122,7 @@ def get_data_loaders(
     print(f"Number of val batches: {len(val_loader)}")
 
     # Test phase
-    test_set = TransformedDataset(test_dataset, transform["Test"])
+    test_set = TransformedDataset(test_dataset, transform["test"])
     test_loader = DataLoader(
         test_set,
         batch_size=batch_size,
