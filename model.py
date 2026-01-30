@@ -1,17 +1,18 @@
 import torch
 import torch.nn as nn
 from pytorchcv.model_provider import get_model as ptcv_get_model
+import timm
 
 
 class MosFPAD(nn.Module):
     def __init__(self):
         super().__init__()
         # Load MobileNetV1 pretrained
-        self.model = ptcv_get_model("mobilenet_w1", pretrained=True)
+        self.model = timm.create_model('mobilenetv1_100', pretrained=True)
 
         # Remove classification head
-        in_features = self.model.output.in_features
-        self.model.output = nn.Identity()
+        in_features = self.model.classifier.in_features
+        self.model.classifier = nn.Identity()
 
         self.fc = nn.Sequential(
             nn.Linear(in_features, 512),

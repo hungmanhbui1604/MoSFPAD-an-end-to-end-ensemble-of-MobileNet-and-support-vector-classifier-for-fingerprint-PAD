@@ -12,6 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from data_loaders import get_data_loaders
+from loss import HingeLoss
 from metrics import MetricsCalculator, print_metrics, save_metrics
 from model import MosFPAD
 from transforms import get_transforms
@@ -37,12 +38,9 @@ def train_epoch(model, train_loader, criterion, optimizer, device, epoch):
         optimizer.zero_grad()
         outputs = model(images)
 
-        # Convert labels from {0, 1} to {-1, +1} for MarginRankingLoss
+        # Convert labels from {0, 1} to {-1, +1} for HingeLoss
         targets = 2 * labels - 1
-        # MarginRankingLoss requires (input1, input2, target)
-        # Use zeros as input2 (decision boundary at 0)
-        zeros = torch.zeros_like(outputs)
-        loss = criterion(outputs, zeros, targets)
+        loss = criterion(outputs, targets)
 
         loss.backward()
         utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
@@ -82,12 +80,9 @@ def validate(model, val_loader, criterion, device, epoch):
 
             outputs = model(images)
 
-            # Convert labels from {0, 1} to {-1, +1} for MarginRankingLoss
+            # Convert labels from {0, 1} to {-1, +1} for HingeLoss
             targets = 2 * labels - 1
-            # MarginRankingLoss requires (input1, input2, target)
-            # Use zeros as input2 (decision boundary at 0)
-            zeros = torch.zeros_like(outputs)
-            loss = criterion(outputs, zeros, targets)
+            loss = criterion(outputs, targets)
 
             running_loss += loss.item() * labels.size(0)
 
@@ -219,8 +214,8 @@ def main(config):
         f"Model initialized with {sum(p.numel() for p in model.parameters())} parameters"
     )
 
-    # Loss and optimizer - use MarginRankingLoss
-    criterion = nn.MarginRankingLoss(margin=config.get("hinge_margin", 1.0))
+    # Loss and optimizer - use HingeLoss
+    criterion = HingeLoss(margin=config.get("hinge_margin", 1.0))
 
     optimizer = optim.Adam(
         model.parameters(),

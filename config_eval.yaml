@@ -1,0 +1,20 @@
+# Data Configuration
+train_sensor: ./data/LivDet2011/Biometrika
+test_sensor: ./data/LivDet2011/Biometrika
+transform_type: mosfpad
+
+# Batch Configuration
+batch_size: 24
+num_workers: 4
+val_split: 0.2
+seed: 42
+
+# Evaluation Configuration
+checkpoint_dir: ./checkpoints
+best_model_name: best_model.pth
+eval_checkpoint_path: null  # Set specific checkpoint path, or null to use best_model_name
+save_predictions: false     # Set to true to save predictions to file
+
+# Output Configuration
+results_dir: ./results
+test_results_name: test_results.txt
